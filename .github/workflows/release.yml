@@ -39,7 +39,7 @@ jobs:
         file: PowerCollections/PowerCollections.csproj
       
     - name: Push
-      run: dotnet nuget push ./PowerCollections/out/*.nupkg --skip-duplicate --no-symbols true --api-key ${{ secrets.TOKEN }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
+      run: dotnet nuget push "**/*.nupkg" --skip-duplicate --no-symbols true --api-key ${{ secrets.TOKEN }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
       
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
