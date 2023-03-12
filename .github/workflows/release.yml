@@ -37,14 +37,6 @@ jobs:
     - name: Pack
       run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
       
-    - name: Upload Artifacts
-    - uses: actions/upload-artifact@v3
-      with:
-        name: nuget
-        if-no-files-found: error
-        retention-days: 7
-        path: ${{ env.NuGetDirectory }}/*.nupkg
-      
     - name: GetVersion
       id: package_version
       uses: KageKirin/get-csproj-version@v1.0.0
