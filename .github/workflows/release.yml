@@ -43,18 +43,23 @@ jobs:
     - name: Pack
       run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
      
-    - name: Save artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: nupkg
-        path: ${{ env.NuGetDirectory }}/*.nupkg
+    #- name: Save artifacts
+    #  uses: actions/upload-artifact@v3
+    #  with:
+    #    name: nupkg
+    #    path: ${{ env.NuGetDirectory }}/*.nupkg
       
     - name: Push
       run: dotnet nuget push "${{ env.NuGetDirectory }}/sofiasketch.PowerCollections.${{ steps.package_version.outputs.version }}.nupkg" --skip-duplicate --api-key ${{ secrets.TOKEN  }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
       
-    - name: Create Release
-      uses: ncipollo/release-action@v1.12.0
+    - name: Release
+      uses: softprops/action-gh-release@v1
       with:
-        artifacts: nupkg
-        tag: "v${{ steps.package_version.outputs.version }}"
+        tag_name: "v${{ steps.package_version.outputs.version }}"
+        files: ${{ env.NuGetDirectory }}/*.nupkg
+    #- name: Create Release
+    #  uses: ncipollo/release-action@v1.12.0
+    #  with:
+    #    artifacts: nupkg.zip
+    #    tag: "v${{ steps.package_version.outputs.version }}"
 
