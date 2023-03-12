@@ -34,17 +34,23 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release 
       
-    - name: Pack
-      run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
-      
     - name: GetVersion
       id: package_version
       uses: KageKirin/get-csproj-version@v1.0.0
       with:
         file: PowerCollections/PowerCollections.csproj
       
+    - name: Pack
+      run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
+     
+    - name: Save artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: "**/sofiasketch.PowerCollections.{{ steps.package_version.outputs.version }}.nupkg"
+        path: ${{ env.NuGetDirectory }}
+      
     - name: Push
-      run: dotnet nuget push "**/*.nupkg" --skip-duplicate --api-key ${{ secrets.TOKEN  }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
+      run: dotnet nuget push "**/sofiasketch.PowerCollections.{{ steps.package_version.outputs.version }}.nupkg" --skip-duplicate --api-key ${{ secrets.TOKEN  }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
       
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
