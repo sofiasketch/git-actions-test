@@ -54,11 +54,6 @@ jobs:
     - name: Push
       run: dotnet nuget push "**/*.nupkg" --skip-duplicate --api-key ${{ secrets.TOKEN  }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
       
-    - uses: actions/download-artifact@v3
-      with:
-        name: nuget
-        path: ${{ env.NuGetDirectory }}
-      
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
       with:
