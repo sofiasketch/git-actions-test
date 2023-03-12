@@ -9,8 +9,7 @@
 		<Description>PowerCollection NuGet package</Description>
 		<Copyright>(c) All right</Copyright>
 		<PackageProjectUrl>https://github.com/sofiasketch/DevTools_lab01</PackageProjectUrl>
-		<VersionPrefix>0.0.2</VersionPrefix>
-		<VersionSuffix>beta</VersionSuffix>
+		<Version>0.0.1</Version>
 		<Authors>sofiasketch</Authors>
 		<RepositoryUrl>https://github.com/sofiasketch/DevTools_lab01</RepositoryUrl>
 	</PropertyGroup>
