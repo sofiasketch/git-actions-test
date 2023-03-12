@@ -1,0 +1,93 @@
+﻿<Project DefaultTargets="Build;Zip" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<UsingTask AssemblyFile="SolutionItems\Tasks\MSBuild.ExtensionPack.dll" TaskName="MSBuild.ExtensionPack.Compression.DNZip"  />
+	<UsingTask AssemblyFile="SolutionItems\Tasks\MSBuild.Community.Tasks.dll" TaskName="MSBuild.Community.Tasks.Version"  />
+
+	<PropertyGroup>
+		<Major Condition=" '$(Major)' == '' ">0</Major>
+		<Minor Condition=" '$(Minor)' == '' ">0</Minor>
+		<Build Condition=" '$(Build)' == '' ">0</Build>
+		<Revision Condition=" '$(Revision)' == '' ">0</Revision>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+		<MainProject>PowerCollections\PowerCollections.csproj</MainProject>
+		<TestProject>PowerCollections.Tests\PowerCollections.Tests.csproj</TestProject>
+		<SkipFailedTests Condition=" '$(SkipFailedTests)' == '' ">True</SkipFailedTests>
+		<AddSrc Condition=" '$(AddSrc)' == '' ">True</AddSrc>
+		<VersionStartDate>$([System.DateTime]::ParseExact("12/31/2022", "MM/dd/yyyy", null).ToString())</VersionStartDate>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<SrcItems Include="PowerCollections\**\*.*;PowerCollections.Tests\**\*.*;" Exclude="**\bin\**;**\obj\**;**\TestResults\**;"/>
+		<Projects Include="$(MainProject)"/>
+		<VersionFile Include="SolutionItems\Version.txt"/>
+	</ItemGroup>
+
+	<Target Name="Clear">
+		<RemoveDir Directories="$(ReleaseFolder)" />
+	</Target>
+
+	<Target Name="Test">
+		<Exec Command="dotnet test $(TestProject) --configuration=$(Configuration)" ContinueOnError="true">
+			<Output TaskParameter="ExitCode" PropertyName="ErrorCode"/>
+		</Exec>
+
+		<Error Condition="$(ErrorCode) != 0 AND $(SkipFailedTests) != 'True'" Text="Test execution failed"/>
+	</Target>
+
+	<Target Name="BeforeBuild">
+		<Version VersionFile="@(VersionFile)" Major="1" Minor="0" BuildType="Automatic" StartDate="$(VersionStartDate)" RevisionType="BuildIncrement">
+			<Output TaskParameter="Major" PropertyName="Major" />
+			<Output TaskParameter="Minor" PropertyName="Minor" />
+			<Output TaskParameter="Build" PropertyName="Build" />
+			<Output TaskParameter="Revision" PropertyName="Revision" />
+		</Version>
+	</Target>
+
+	<Target Name="Build" DependsOnTargets="Test;BeforeBuild">
+		<PropertyGroup>
+			<CurrentDate>$([System.DateTime]::Now.ToString("yyyyMMdd"))</CurrentDate>
+			<ReleaseNumber Condition=" '$(ReleaseNumber)' == '' ">$(Major).$(Minor).$(Build).$(Revision)</ReleaseNumber>
+			<ReleaseFolder>Releases\PowerCollections_$(CurrentDate)_$(ReleaseNumber)</ReleaseFolder>
+			<BinFolder>$(ReleaseFolder)/bin</BinFolder>
+			<SrcFolder>$(ReleaseFolder)/src</SrcFolder>
+			<DocFolder>$(ReleaseFolder)/doc</DocFolder>
+		</PropertyGroup>
+
+		<MSBuild Projects="@(Projects)" Targets="Pack" Properties="Configuration=$(Configuration);Version=$(ReleaseNumber)"/>
+
+		<ItemGroup>
+			<NugetFiles Include="PowerCollections\bin\$(Configuration)\*.$(ReleaseNumber).nupkg" />
+			<DocFxConfig Include="docfx.json" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(NugetFiles)" DestinationFolder="$(BinFolder)" />
+		<Message Text="Package was generated and copied successfully" Importance="high" />
+
+		<Copy Condition=" '$(AddSrc)' == 'True' " SourceFiles="@(SrcItems)" DestinationFiles="@(SrcItems->'$(SrcFolder)\%(RelativeDir)\%(Filename)%(Extension)')" />
+		<Message Condition=" '$(AddSrc)' == 'True' " Text="Source files were copied successfully" Importance="high" />
+		<Message Condition=" '$(AddSrc)' != 'True' " Text="Source files were NOT copied dut to setup" Importance="high" />
+
+		<Exec Command="docfx @(DocFxConfig)" />
+
+		<ItemGroup>
+			<DocFiles Include="_site/**;" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(DocFiles)" DestinationFiles="@(DocFiles->'$(DocFolder)\%(RelativeDir)\%(Filename)%(Extension)')" />
+		<RemoveDir Directories="_site" />
+		<Message Text="Docs were generated successfully" Importance="high" />
+	</Target>
+
+	<Target Name="Zip" DependsOnTargets="Build">
+		<MSBuild.ExtensionPack.Compression.DNZip
+			CompressionLevel="BestCompression"
+			TaskAction="Create"
+			CompressPath="$(ReleaseFolder)"
+			ZipFileName="$(ReleaseFolder).zip" />
+		<RemoveDir Directories="$(ReleaseFolder)" />
+
+		<Message Text="ZIP was created successfully" Importance="high" />
+	</Target>
+</Project>
