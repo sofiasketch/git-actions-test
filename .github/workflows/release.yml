@@ -46,15 +46,15 @@ jobs:
     - name: Save artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: sofiasketch.PowerCollections.{{ steps.package_version.outputs.version }}.nupkg
+        name: nupkg
         path: ${{ env.NuGetDirectory }}/*.nupkg
       
     - name: Push
-      run: dotnet nuget push "**/sofiasketch.PowerCollections.{{ steps.package_version.outputs.version }}.nupkg" --skip-duplicate --api-key ${{ secrets.TOKEN  }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
+      run: dotnet nuget push "${{ env.NuGetDirectory }}/sofiasketch.PowerCollections.${{ steps.package_version.outputs.version }}.nupkg" --skip-duplicate --api-key ${{ secrets.TOKEN  }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
       
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
       with:
-        artifacts: "sofiasketch.PowerCollections.{{ steps.package_version.outputs.version }}.nupkg"
+        artifacts: nupkg
         tag: "v${{ steps.package_version.outputs.version }}"
 
