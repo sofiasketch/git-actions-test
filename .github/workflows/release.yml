@@ -6,6 +6,9 @@ name: .NET release
 on:
   workflow_dispatch
 
+env:
+  NuGetDirectory: ${{ github.workspace}}/nuget
+
 jobs:
   build:
     name: release
@@ -32,7 +35,15 @@ jobs:
       run: dotnet test --no-build --verbosity normal
       
     - name: Pack
-      run: dotnet pack
+      run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
+      
+    - name: Upload Artifacts
+    - uses: actions/upload-artifact@v3
+      with:
+        name: nuget
+        if-no-files-found: error
+        retention-days: 7
+        path: ${{ env.NuGetDirectory }}/*.nupkg
       
     - name: GetVersion
       id: package_version
@@ -43,9 +54,14 @@ jobs:
     - name: Push
       run: dotnet nuget push "**/*.nupkg" --skip-duplicate --api-key ${{ secrets.TOKEN  }} --source "https://nuget.pkg.github.com/sofiasketch/index.json"
       
+    - uses: actions/download-artifact@v3
+      with:
+        name: nuget
+        path: ${{ env.NuGetDirectory }}
+      
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
       with:
-        artifacts: "sofiasketch.PowerCollections.{{ steps.package_version.outputs.version }}.nupkg"
+        artifacts: "${{ env.NuGetDirectory }}/sofiasketch.PowerCollections.{{ steps.package_version.outputs.version }}.nupkg"
         tag: "v${{ steps.package_version.outputs.version }}"
 
