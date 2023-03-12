@@ -46,6 +46,6 @@ jobs:
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
       with:
-        artifacts: "**/*.nuget"
+        artifacts: "sofiasketch.PowerCollections.{{ steps.package_version.outputs.version }}.nupkg"
         tag: "v${{ steps.package_version.outputs.version }}"
 
